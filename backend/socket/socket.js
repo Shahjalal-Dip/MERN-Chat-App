@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
 	cors: {
-		origin: ["https://mern-chat-app-3arc.onrender.com"],
+		origin: ["https://mern-chat-app-3arc.onrender.com", "http://localhost:3000"],
 		methods: ["GET", "POST"],
 	},
 });
@@ -26,6 +26,15 @@ io.on("connection", (socket) => {
 
 	// io.emit() is used to send events to all the connected clients
 	io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
+	// Handle new message
+	socket.on("sendMessage", (message) => {
+		const receiverSocketId = getReceiverSocketId(message.receiverId);
+		if (receiverSocketId) {
+			// Send message to specific receiver
+			io.to(receiverSocketId).emit("newMessage", message);
+		}
+	});
 
 	// socket.on() is used to listen to the events. can be used both on client and server side
 	socket.on("disconnect", () => {
